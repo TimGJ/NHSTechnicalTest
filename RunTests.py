@@ -41,7 +41,6 @@ if __name__ == '__main__':
                     format = '%(asctime)s:%(levelname)s:%(message)s')
 
 
-    print(args)
     logging.info("Beginning tests")
     if 1 in args.parts:
         NHSTechnicalTestPart1.PerformTests()
