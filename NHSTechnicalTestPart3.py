@@ -11,8 +11,14 @@ succeeded_validation.csv
 failed_validation.csv
 
 The postcodes in the two files need to be ordered as per the row_id, in ascending numeric order.
-Analyse the performance of your solution and make an attempt to optimise the performance of the operation (in terms of overall 'wall' time taken). Describe how you improved the performance of the code, and how you measured the impact of your changes.
-It is acceptable to not use the regular expression (or different regular expression(s)) for this part of the task, but the output in terms of the correctness of the validation needs to match the critieria in Part 1.
+
+Analyse the performance of your solution and make an attempt to optimise the performance of the 
+operation (in terms of overall 'wall' time taken). Describe how you improved the performance of 
+the code, and how you measured the impact of your changes.
+
+It is acceptable to not use the regular expression (or different regular expression(s)) 
+for this part of the task, but the output in terms of the correctness of the validation 
+needs to match the critieria in Part 1.
   
 @author: Tim Greening-Jackson
 """
@@ -82,6 +88,14 @@ def PerformTests(InputFileName   = 'import_data.csv',
         entire dataset in memory in two lists, one for the successfully
         validated codes, the other for the unsuccessful ones, and then sort
         both lists prior to output.
+        
+        In a real-world application there are various ways in which the performance
+        of the code could be improved. All of these however would involve either
+        departing from the restriction that we can only use standard libraries,
+        so we can't use numpy's vectorization and sorting routines, nor (on the
+        assumption that this is an exercise in Python) write the code in C. These
+        changes would also likely signficantly reduce the readability of the code
+        with relatively little performance gain.
         
         The most efficient way to process the postcodes will be using 
         list comprehensions rather than explicit, unrolled for loops. It 
