@@ -87,8 +87,6 @@ The exercise is to implement the regular expression (re) above AS IS.
 @author: Tim Greening-Jackson
 """
 import re
-import logging
-import sys
 
 class PostCode:
     """
@@ -143,7 +141,4 @@ class PostCode:
         else:
             return self.postcode < other.postcode
 
-
-logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
-                    format = '%(asctime)s:%(levelname)s:%(message)s')
 

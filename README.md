@@ -27,12 +27,33 @@ file simply execute
 
 `$ python3 RunTests.py`
 
+This will write the default output files to the current directory.
+
 For help/options execute
 
 `$ python3 RunTests.py --help`
 
 Output is via the Python logger to sys.stdout. It can be redirected
-to a file e.g.
+to a file by using the `--logfile` option
 
-`$ python3 RunTests.py > test.log`
+`$ python3 RunTests.py --logfile = test.log`
+
+To specify an input file name use the `--input` option e.g.
+
+`$ python3 RunTests.py --input = /home/fred/import_data.csv`
+
+To specify error (i.e. unmatched) and success (i.e. matched) files
+use the `--unmatched` and `--matched` options respectively e.g.
+
+`$ python3 RunTests.py --error = /tmp/bad.csv --matched = /tmp/good.csv`
+
+By default all three sets of tests are run. To specify one or more
+parts to run use the `--parts` option e.g.
+
+`$ python3 RunTests.py --parts 2 3`
+
+would only run the Part 2 and Part 3 tests. All command line options may be
+abbreviated.
+
+
 
