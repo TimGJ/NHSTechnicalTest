@@ -7,7 +7,9 @@ Simple wrapper to perform all three sets of tests.
 
 Syntax:
     
-    $ python3 RunTests.py --logfile=logfile --
+    $ python3 RunTests.py
+    
+    See below for command line options
 
 @author: Tim Greening-Jackson
 """
