@@ -13,11 +13,11 @@ to the appropriate scripts.
 ## Files
 The software consists of the following source files
 
-`NHSPostCode.py` Fundamental definitions (principally the PostCode class)
-`NHSTechnicalTestPart1.py` Part 1 tests
-`NHSTechnicalTestPart2.py` Part 2 tests
-`NHSTechnicalTestPart3.py` Part 3 tests
-`RunTests.py` The main script used to execute the tests
+1. `NHSPostCode.py` Fundamental definitions (principally the PostCode class)
+2. `NHSTechnicalTestPart1.py` Part 1 tests
+3. `NHSTechnicalTestPart2.py` Part 2 tests
+4. `NHSTechnicalTestPart3.py` Part 3 tests
+5. `RunTests.py` The main script used to execute the tests
 
 ## Running the software
 
