@@ -31,5 +31,8 @@ For help/options execute
 
 `$ python3 RunTests.py --help`
 
+Output is via the Python logger to sys.stdout. It can be redirected
+to a file e.g.
 
+`$ python3 RunTests.py > test.log`
 
