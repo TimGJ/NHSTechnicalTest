@@ -37,6 +37,7 @@ does the regular expression validate all UK postcode cases?
 @author: Tim Greening-Jackson
 """
 import logging
+import sys
 from NHSPostCode import PostCode
 
 def PerformTests():
@@ -63,16 +64,19 @@ def PerformTests():
     for pcset, description in zip([BadPostCodes, GoodPostCodes], 
                                   ["Malformed", "Correctly formed"]):
         logging.info("Testing {} postcodes".format(description))
-        for result in [PostCode(p) for p in pcset]:
+        for result in [PostCode(p, analyse=True) for p in pcset]:
             if result.match:
                 logging.info("Postcode {:10} matched OK".format(result.postcode))
             else:
-                logging.info("Postcode {:10} failed to match".format(result.postcode))
+                logging.info("Postcode {:10} failed to match: {}".format(result.postcode, 
+                                                     result.errorcode))
     logging.info('Finished Part 1 tests')
 
 
 if __name__ == '__main__':
 
+    logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
+                format = '%(asctime)s:%(levelname)s:%(message)s')
     PerformTests()
     
 

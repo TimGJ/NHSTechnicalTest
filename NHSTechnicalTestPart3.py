@@ -23,6 +23,7 @@ needs to match the critieria in Part 1.
 @author: Tim Greening-Jackson
 """
 import logging
+import sys
 import csv
 
 from NHSPostCode import PostCode
@@ -131,4 +132,6 @@ def PerformTests(InputFileName   = 'import_data.csv',
 
 if __name__ == '__main__':
 
+    logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
+                format = '%(asctime)s:%(levelname)s:%(message)s')
     PerformTests()
