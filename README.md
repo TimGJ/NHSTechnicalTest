@@ -62,16 +62,16 @@ be run. Objects of the `PostCode` class have an attribute `status`.
 
 The following codes are defined
 
-`OK                     ` The code has validated successfully
-`OUTWARD_TOO_SHORT      ` The outward part of the code is too short
-`OUTARD_TOO_LONG        ` The outward part of the code is too long
-`OUTWARD_MALFORMED      ` The outward part is malformed
-`INWARD_MALFORMED       ` The inward part is malformed
-`TOO_MANY_PARTS         ` The code has too many parts/whitespace
-`NO_SPACE               ` There is no space separating the outward and inward parts
-`JUNK                   ` The code is junk - i.e. contains non alphanumeric/whitespace
-`AA9A_MALFORMED         ` An AA9A type outward code contains an illegal letter
-`AA9_MALFORMED          ` An AA9 type outward code contains an illegal letter
-`A9_MALFORMED           ` An A9 type outward code contains an illegal letter
-`SINGLE_DIGIT_DISTRICT  ` The PostCode district only allows single digits
-`DOUBLE_DIGIT_DISTRICT  ` The PostCode district only allows double digits
+1.`OK                     ` The code has validated successfully
+2.`OUTWARD_TOO_SHORT      ` The outward part of the code is too short
+3.`OUTARD_TOO_LONG        ` The outward part of the code is too long
+4.`OUTWARD_MALFORMED      ` The outward part is malformed
+5.`INWARD_MALFORMED       ` The inward part is malformed
+6.`TOO_MANY_PARTS         ` The code has too many parts/whitespace
+7.`NO_SPACE               ` There is no space separating the outward and inward parts
+8.`JUNK                   ` The code is junk - i.e. contains non alphanumeric/whitespace
+9.`AA9A_MALFORMED         ` An AA9A type outward code contains an illegal letter
+10.`AA9_MALFORMED          ` An AA9 type outward code contains an illegal letter
+11.`A9_MALFORMED           ` An A9 type outward code contains an illegal letter
+12.`SINGLE_DIGIT_DISTRICT  ` The PostCode district only allows single digits
+13.`DOUBLE_DIGIT_DISTRICT  ` The PostCode district only allows double digits
