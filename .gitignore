@@ -1,0 +1,6 @@
+*.docx
+*~
+__paycache__/
+*.pyc
+*.pyo
+*.csv
