@@ -55,5 +55,23 @@ parts to run use the `--parts` option e.g.
 would only run the Part 2 and Part 3 tests. All command line options may be
 abbreviated.
 
+# Validation and Status Codes
 
+In the event that a PostCode does not validate an analysis can optionally
+be run. Objects of the `PostCode` class have an attribute `status`.
 
+The following codes are defined
+
+`OK                     ` The code has validated successfully
+`OUTWARD_TOO_SHORT      ` The outward part of the code is too short
+`OUTARD_TOO_LONG        ` The outward part of the code is too long
+`OUTWARD_MALFORMED      ` The outward part is malformed
+`INWARD_MALFORMED       ` The inward part is malformed
+`TOO_MANY_PARTS         ` The code has too many parts/whitespace
+`NO_SPACE               ` There is no space separating the outward and inward parts
+`JUNK                   ` The code is junk - i.e. contains non alphanumeric/whitespace
+`AA9A_MALFORMED         ` An AA9A type outward code contains an illegal letter
+`AA9_MALFORMED          ` An AA9 type outward code contains an illegal letter
+`A9_MALFORMED           ` An A9 type outward code contains an illegal letter
+`SINGLE_DIGIT_DISTRICT  ` The PostCode district only allows single digits
+`DOUBLE_DIGIT_DISTRICT  ` The PostCode district only allows double digits
