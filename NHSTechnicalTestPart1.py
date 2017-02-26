@@ -38,7 +38,155 @@ does the regular expression validate all UK postcode cases?
 """
 import logging
 import sys
-from NHSPostCode import PostCode
+import unittest
+from NHSPostCode import PostCode, PCValidationCodes
+
+class PostCodeTest(unittest.TestCase):
+    """
+    Unit tests test the PostCode validation. Note that these
+    test validation against the specified RE and not that the 
+    supplied postcode is an entrirely valid UK one.
+    
+    All test cases specified are run with the analyse flag being
+    set to True, False and unset, representing all possible test
+    cases.
+    
+    As the unit tests don't produce any output unless they fail, we 
+    also log some output for the record.
+    """
+           
+    def test_good_postcodes(self):
+        """
+        Test the postcodes which we expect to pass. They should return
+        PCValidationCodes.OK whether or not the analysis flag is set.
+        
+        Note we test for the analyse flag being set True, False and not set
+        at all.
+        """
+        PostCodes = ['EC1A 1BB', 'W1A 0AX',  'M1 1AE',     'B33 8TH',  
+                     'CR2 6XH',  'DN55 1PT', 'GIR 0AA',    'SO10 9AA', 
+                     'FY9 9AA',  'WC1A 9AA']
+
+        for analyse in [True, False]:
+            for postcode in PostCodes:
+                p = PostCode(postcode, analyse=analyse)
+                self.assertEqual(p.status, PCValidationCodes.OK)
+                logging.info("Validating '{}' with analysis={}. Status={}".\
+                             format(postcode, analyse, p.status))
+        # Now test with the analyse flag not set at all (e.g. default)
+        for postcode in PostCodes:
+            p = PostCode(postcode)
+            self.assertEqual(p.status, PCValidationCodes.OK)
+            logging.info("Validating '{}' with no analysis flag. Status={}".\
+                             format(postcode, p.status))
+                
+    def test_bad_postcodes_without_analysis(self):
+        """
+        Test the list of bad postcodes with the exception of 'LS44PL',
+        with analyse not set (i.e. default value). They should all return PCValidationCodes.UNKNOWN, 
+        as we know they're bad, but don't know why. (The 'LS44PL' would be detected
+        early on uin the constructor, before parsing against the RE and so would
+        be expected to return PCValidationCodes.INCORRECT_GROUPING rather than 
+        PCValidationCodes.UNKNOWN)
+        
+        Note that we test for both the analyse flag being set False and also
+        being omitted (i.e. default value). Both should return the same result
+        """
+        
+        PostCodes = ['$%± ()()',  'XX XXX',   'A1 9A',    
+                    'Q1A 9AA',    'V1A 9AA',  'X1A 9BB',  'LI10 3QP',
+                    'LJ10 3QP',   'LZ10 3QP', 'A9Q 9AA',  'AA9C 9AA',
+                    'FY10 4PL',   'SO1 4QQ']
+        for postcode in PostCodes:
+            p = PostCode(postcode)
+            self.assertEqual(p.status, PCValidationCodes.UNKNOWN)
+            logging.info("Validating '{}' with no analyse flag. Status={}".format(postcode, p.status))
+            p = PostCode(postcode, analyse=False)
+            self.assertEqual(p.status, PCValidationCodes.UNKNOWN)
+            logging.info("Validating '{}' with analyse=False. Status={}".format(postcode, p.status))
+            
+    def test_junk_with_analysis(self):
+        """
+        Pass a junk code requesting analysis
+        """
+        postcode = '$%± ()()'
+        p = PostCode(postcode, analyse=True)
+        self.assertEqual(p.status, PCValidationCodes.JUNK)
+        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+        
+    def test_outward_aa9_malformed_with_analysis(self):
+        """
+        Test the outward AA9s with illegal characters in the outward part
+        """
+        PostCodes = ['LI10 3QP', 'LJ10 3QP', 'LZ10 3QP']
+        for postcode in PostCodes:
+            p = PostCode(postcode, analyse=True)
+            self.assertEqual(p.status, PCValidationCodes.OUTWARD_AA9_MALFORMED)
+            logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+
+    def test_outward_aa9a_malformed_with_analysis(self):
+        """
+        Test the outward AA9s with illegal characters in the outward part
+        """
+        postcode = 'AA9C 9AA'
+        p = PostCode(postcode, analyse=True)
+        self.assertEqual(p.status, PCValidationCodes.OUTWARD_AA9A_MALFORMED)
+        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+
+    def test_outward_malformed_with_analysis(self):
+        """
+        Test the postcodes with illegal characters in the outward part
+        """
+        PostCodes = ['Q1A 9AA', 'V1A 9AA', 'X1A 9BB', 'A9Q 9AA']
+        for postcode in PostCodes:
+            p = PostCode(postcode, analyse=True)
+            self.assertEqual(p.status, PCValidationCodes.OUTWARD_MALFORMED)
+            logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+
+    def test_inward_malformed_with_analysis(self):
+        """
+        Test the postcodes with illegal characters in the inward part. Note that the postcode
+        'XX XXX' has illegal inward and outward parts, so returns the result of the first test
+        (inward) performed. If the structure of the code changes this might break.
+        
+        We don't specifically check for both inward and outward parts being malformed as
+        in practice this would happen in so few instances as to be not worthwhile, given 
+        that we've already checked that the postcode isn't junk.
+        """
+        PostCodes = ['XX XXX', 'A1 9A']
+        for postcode in PostCodes:
+            p = PostCode(postcode, analyse=True)
+            self.assertEqual(p.status, PCValidationCodes.INWARD_MALFORMED)
+            logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+        
+    def test_single_digit_district_with_analysis(self):
+        """
+        Test that single digit distrct test works...
+        """
+        postcode = 'FY10 4PL'
+        p = PostCode(postcode, analyse=True)
+        self.assertEqual(p.status, PCValidationCodes.SINGLE_DIGIT_DISTRICT)
+        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+        
+    def test_double_digit_district_with_analysis(self):
+        """
+        Test that double digit distrct test works...
+        """
+        postcode = 'SO1 4QQ'
+        p = PostCode(postcode, analyse=True)
+        self.assertEqual(p.status, PCValidationCodes.DOUBLE_DIGIT_DISTRICT)
+        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
+        
+    def test_no_space_with_analysis(self):
+        """
+        Test the postcode with no space between outward and inward parts. (Not
+        parsed by the RE)
+        """
+        postcode = 'LS44PL'
+        p = PostCode(postcode, analyse=True)
+        self.assertEqual(p.status, PCValidationCodes.INCORRECT_GROUPING)
+        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
+        
 
 def PerformTests():
     """
@@ -52,25 +200,10 @@ def PerformTests():
     """
     logging.info('Starting Part 1 tests')
 
-    BadPostCodes = ['$%± ()()',  'XX XXX',   'A1 9A',    'LS44PL',
-                    'Q1A 9AA',    'V1A 9AA',  'X1A 9BB',  'LI10 3QP',
-                    'LJ10 3QP',   'LZ10 3QP', 'A9Q 9AA',  'AA9C 9AA',
-                    'FY10 4PL',   'SO1 4QQ']
-    
-    GoodPostCodes = ['EC1A 1BB', 'W1A 0AX',  'M1 1AE',     'B33 8TH',  
-                     'CR2 6XH',  'DN55 1PT', 'GIR 0AA',    'SO10 9AA', 
-                     'FY9 9AA',  'WC1A 9AA']
-    
-    for pcset, description in zip([BadPostCodes, GoodPostCodes], 
-                                  ["Malformed", "Correctly formed"]):
-        logging.info("Testing {} postcodes".format(description))
-        for result in [PostCode(p, analyse=True) for p in pcset]:
-            if result.match:
-                logging.info("Postcode {:10} matched OK".format(result.postcode))
-            else:
-                logging.info("Postcode {:10} failed to match: {}".format(result.postcode, 
-                                                     result.errorcode))
+    unittest.main()
+
     logging.info('Finished Part 1 tests')
+
 
 
 if __name__ == '__main__':

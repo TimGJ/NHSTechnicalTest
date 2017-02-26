@@ -62,16 +62,44 @@ be run. Objects of the `PostCode` class have an attribute `status`.
 
 The following codes are defined
 
-1.  `OK                     ` The code has validated successfully
-2.  `OUTWARD_TOO_SHORT      ` The outward part of the code is too short
-3.  `OUTARD_TOO_LONG        ` The outward part of the code is too long
-4.  `OUTWARD_MALFORMED      ` The outward part is malformed
-5.  `INWARD_MALFORMED       ` The inward part is malformed
-6.  `TOO_MANY_PARTS         ` The code has too many parts/whitespace
-7.  `NO_SPACE               ` There is no space separating the outward and inward parts
-8.  `JUNK                   ` The code is junk - i.e. contains non alphanumeric/whitespace
-9.  `AA9A_MALFORMED         ` An AA9A type outward code contains an illegal letter
-10. `AA9_MALFORMED          ` An AA9 type outward code contains an illegal letter
-11. `A9_MALFORMED           ` An A9 type outward code contains an illegal letter
-12. `SINGLE_DIGIT_DISTRICT  ` The PostCode district only allows single digits
-13. `DOUBLE_DIGIT_DISTRICT  ` The PostCode district only allows double digits
+###`OK`
+The postcode has matched correctly against the RE.
+
+###`UNKNOWN`
+The postcode has failed to match against the RE, but the cause is unknown
+(the `analyse` flag was either not set or set to `False`)
+
+###`OUTWARD_MALFORMED`
+The outward group of the postcode (i.e. to the left of the space) does not fit
+the known/allowed patterns e.g. `AA9A`
+
+###`OUTWARD_AA9A_MALFORMED`
+The outward group of an `AA9A` postcode is malformed. This is usually because it contains
+an illegal character (e.g. `Q`)
+
+###`OUTWARD_AA9_MALFORMED`  
+The outward group of an `AA9` postcode is malformed. This is usually because it contains
+an illegal character (e.g. `Q`). Note that errors in single and double digit areas
+have separate codes, `SINGLE_DIGIT_DISTRICT` and `DOUBLE_DIGIT_DISTRICT`. 
+
+
+###`OUTWARD_A9_MALFORMED`   
+The outward group of an `A9` postcode is malformed. This is usually because it contains
+an illegal character (e.g. `Q`)
+
+###`INWARD_MALFORMED`       
+The inward group (to the right of the space)  of any postcode is malformed, usually because
+it contains an illegal character (e.g. `I`)
+
+###`INCORRECT_GROUPING`
+The number of groups (i.e. sets of alphanumeric characters separated by a single whitespace)
+is not exactly two.
+
+###`JUNK`
+The postcode contains non alphanumeric/whitespace characters. 
+
+###`SINGLE_DIGIT_DISTRICT`
+The postcode area should only have single digit districts.
+
+###`DOUBLE_DIGIT_DISTRICT`
+The postcode area should only have double digit districts.

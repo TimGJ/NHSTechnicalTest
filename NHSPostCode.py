@@ -69,8 +69,9 @@ The exercise is to implement the regular expression (re) above AS IS.
    
 4. Although it is strictly beyond the scope of this exercise, the re has
    been tested on ALL 1.7M UK postcodes and has validated them all successfully.
-   It will, of course, validate various nonexistent postcodes, provided they are
-   legal within the scope of the re definition.
+   So all UK postcodes can be validated, although there will be false positives.
+   These would include various nonexistent postcodes, provided they are
+   legal within the scope of the re definition,
    
 5. It doesn't correctly match some postcodes (i.e. allows false positives).
 
@@ -82,12 +83,18 @@ The exercise is to implement the regular expression (re) above AS IS.
    C. Despite appearing to handle it, the re also allows the WC area to 
       have districts which do not have a trailing letter - e.g. it allows 
       WC4 9PP. All postcodes in the WC area are of the form WC9A 9AA.
+
+   D. There are only certain single-letter postcode areas allowed,
+      [B, E, G, L, M, N, S, W], the RE does not enforce this.
+
+   It would be possible to extend the RE to cope with all these cases, 
+   but that would add to its complexity, reduce its performance and 
+   still not guarantee to catch all invalid postcodes. 
    
     
 @author: Tim Greening-Jackson
 """
 import re
-import unittest
 import enum
 import logging
 import sys
@@ -106,16 +113,14 @@ class PCValidationCodes(enum.Enum):
     and testcases defined.
     """
     OK                     = enum.auto()
-    OUTWARD_TOO_SHORT      = enum.auto()
-    OUTARD_TOO_LONG        = enum.auto()
+    UNKNOWN                = enum.auto()
     OUTWARD_MALFORMED      = enum.auto()
+    OUTWARD_AA9A_MALFORMED = enum.auto()
+    OUTWARD_AA9_MALFORMED  = enum.auto()
+    OUTWARD_A9_MALFORMED   = enum.auto()
     INWARD_MALFORMED       = enum.auto()
-    TOO_MANY_PARTS         = enum.auto()
-    NO_SPACE               = enum.auto()
+    INCORRECT_GROUPING     = enum.auto()
     JUNK                   = enum.auto()
-    AA9A_MALFORMED         = enum.auto()
-    AA9_MALFORMED          = enum.auto()
-    A9_MALFORMED           = enum.auto()
     SINGLE_DIGIT_DISTRICT  = enum.auto()
     DOUBLE_DIGIT_DISTRICT  = enum.auto()
 
@@ -177,19 +182,30 @@ class PostCode:
             
         """
         self.postcode = rawtext                     # The raw text of the postcode
-        self.match    = PostCode.RE.match(rawtext)  # Match against the specified RE
-        self.inward   = None                        # Placeholder for inward part of PC
-        self.outward  = None                        # Placeholder for outward part of PC
 
-        try:
-            self.row_id = int(row_id)               # Convert the rowid to integer which will make sorting etc. much faster
-        except (ValueError, TypeError):
-            self.row_id = None
+        # Split the postcode in to its inward and outward groups, so for M1 7EP 
+        # the outward is "M1" and the inward "7EP". If there aren't exactly
+        # two groups then reject the postcode (no need to do the re.match())
+        
+        groups = re.split("\s", self.postcode.strip())
 
-        if not self.match and analyse:              # If it hasn't matched, find out why
-            self.errorcode = self.Analyse()
+        if len(groups) != 2:
+            self.outward  = None                    # Shouldn't need to set these...
+            self.inward   = None                    # ... to None but probably wise ...
+            self.match    = None                    # ... in case someone refers to them elsewhere.
+            self.status   = PCValidationCodes.INCORRECT_GROUPING
         else:
-            self.errorcode = None
+            self.outward  = groups[0]
+            self.inward   = groups[1]           
+            self.match    = PostCode.RE.match(rawtext) 
+            if self.match:                          # Clean match against RE
+                self.status   = PCValidationCodes.OK   
+            else:                                   # Match failed
+                if analyse:                         # Do we test to see why it failed?...
+                    self.status = self.Analyse()
+                else:                               # ... or just put it down as UNKNOWN?
+                    self.status = PCValidationCodes.UNKNOWN
+            
 
     def __repr__(self):
         return "{}: {}".format(self.postcode, self.row_id)
@@ -202,7 +218,7 @@ class PostCode:
 
     def Analyse(self):
         """
-        Analyses a piece of text which has failed validation to find out why.
+        Analyses a postcode for validation.
         
         Python REs either match completely or they fail. There is no partial 
         matching of certain groups (unlike the Java function hitEnd()). 
@@ -219,34 +235,23 @@ class PostCode:
         ensure that the various child REs below are updated appropriately.
         
         """
-        # Split the postcode in to its inward and outward parts. So for M1 7EP 
-        # the inward is "M1" and the outward "7EP"
-        parts = re.split("\s", self.postcode.strip())
-        if len(parts) > 2:
-            return PCValidationCodes.TOO_MANY_PARTS
-        elif len(parts) == 1:
-            return PCValidationCodes.NO_SPACE
-        else:
-            self.outward  = parts[0]
-            self.inward   = parts[1]
 
-
-        status = self.test_junk()            # See if it's junk/nonsense
+        status = self.ValidateCharacters()       # See if it's junk/nonsense
         if status != PCValidationCodes.OK:
             return status
 
-        status = self.test_inward()          # Test the inward part 
+        status = self.ValidateInward()          # Test the inward part 
         if status != PCValidationCodes.OK:
             return status
 
-        status = self.test_outward()         # Test the outward part
+        status = self.ValidateOutward()         # Test the outward part
         if status != PCValidationCodes.OK:
             return status
 
         return PCValidationCodes.OK
         
 
-    def test_junk(self):
+    def ValidateCharacters(self):
         """
         Tests if the postcode is "junk". This is undefined in the specification,
         but is taken to mean that is not two groups of alphanumeric characters
@@ -258,30 +263,23 @@ class PostCode:
         else:
             return PCValidationCodes.JUNK
 
-    def test_outward(self):
+    def ValidateOutward(self):
         """
         Tests the outward part of the postcode (e.g. "M" for "M1 7EP"). 
         
-        First check it for length. Next determine what kind of 
-        inward code it is (as they all have potentially separate rules).
+        Determine what kind of outward code it is 
+        (as they all have potentially separate rules).
         """
-        MinOutwardLength  = 2 # Minumum number of characters (2) e.g. "M1"
-        MaxOutwardLength  = 4 # Maximum number of characters (4) e.g. "SW1A"
-
-        if len(self.outward) < MinOutwardLength:
-            return PCValidationCodes.OUTWARD_TOO_SHORT
-        elif len(self.inward) > MaxOutwardLength:
-            return PCValidationCodes.OUTWARD_TOO_LONG
-        elif re.match("^[A-Z]{2}\d[A-Z]$", self.outward):   # Is it an AA9A
-            return self.test_aa9a_district()
-        elif re.match("^[A-Z]{2}\d{1,2}$", self.outward):   # Is it an AA9/AA99
-            return self.test_aa9_district()
-        elif re.match("^[A-Z]\d{1,2}$", self.outward):      # Is it an A9/A99
-            return self.test_a9_district()
+        if re.match("^[A-Z]{2}\d[A-Z]$", self.outward):   # Is it an AA9A
+            return self.ValidateOutwardAA9A()
+        elif re.match("^[A-Z]{2}\d{1,2}$", self.outward): # Is it an AA9/AA99
+            return self.ValidateOutwardAA9()
+        elif re.match("^[A-Z]\d{1,2}$", self.outward):    # Is it an A9/A99
+            return self.ValidateOutwardA9()
         else:
-            return PCValidationCodes.OUTWARD_MALFORMED
+            return PCValidationCodes.OUTWARD_MALFORMED    # Don't know what it is
 
-    def test_inward(self):        
+    def ValidateInward(self):        
         """
         Tests that the inward part (e.g. "7EP") is correctly formed as per the
         supplied RE
@@ -291,14 +289,14 @@ class PostCode:
         else:
             return PCValidationCodes.INWARD_MALFORMED
         
-    def test_aa9a_district(self):
+    def ValidateOutwardAA9A(self):
         """
         Tests for post areas and districts of the form SW1A etc.
 
         Returns 
 
             PCValidationCodes.OK if valid else 
-            PCValidationCodes.AA9A_MALFORMED
+            PCValidationCodes.OUTWARD_AA9A_MALFORMED
             
         Note
         
@@ -312,22 +310,34 @@ class PostCode:
         if match:
             return PCValidationCodes.OK
         else:
-            return PCValidationCodes.AA9A_MALFORMED
+            return PCValidationCodes.OUTWARD_AA9A_MALFORMED
             
 
-    def test_aa9_district(self):
+    def ValidateOutwardAA9(self):
         """
         Test for post areas and districts of the form LS1, LS22 etc.
 
         Returns 
 
-            PCValidationCodes.OK if valid else 
-            PCValidationCodes.AA9_MALFORMED
+            PCValidationCodes.OK if valid else
+            PCValidationCodes.SINGLE_DIGIT_DISTRICT if a single digit district has double digits
+            PCValidationCodes.DOUBLE_DIGIT_DISTRICT if a double digit district has a single digit
+            PCValidationCodes.OUTWARD_AA9_MALFORMED
+
+        Note.
+            We are testing against the RE as supplied. We could (but this
+            is beyond the scope of this exercise) test for areas which
+            are allowed a zero districts etc.
         """
         SingleDigitDistricts = "BR|FY|HA|HD|HG|HR|HS|HX|JE|LD|SM|SR|WC|WN|ZE".split("|")
         DoubleDigitDistricts = "AB|LL|SO".split("|")
         match = re.match('^([A-PR-UWYZ][A-HK-Y])([0-9]+)$', self.outward)
 
+        # Some areas e.g. AB can only have double digit districts e.g. AB23
+        # whereas others e.g. FY can only have single digits. So if the pattern
+        # matches then check that's OK and if so return OK. 
+        #
+        # If it doesn't match then by definition it's malformed.
         if match:
             if match.groups()[0] in SingleDigitDistricts and len(match.groups()[1]) > 1:
                 return PCValidationCodes.SINGLE_DIGIT_DISTRICT
@@ -336,31 +346,33 @@ class PostCode:
             else:
                 return PCValidationCodes.OK
         else:
-            return PCValidationCodes.AA9_MALFORMED
+            return PCValidationCodes.OUTWARD_AA9_MALFORMED
 
-    def test_a9_district(self):
+    def ValidateOutwardA9(self):
         """
         Test for post areas and districts of the form M1 etc.
 
         Returns 
 
             PCValidationCodes.OK if valid else 
-            PCValidationCodes.A9_MALFORMED
+            PCValidationCodes.OUTWARD_A9_MALFORMED
             
         Note.
             We are testing against the RE as supplied. We could (but this
             is beyond the scope of this exercise) test that it's a valid
             single letter area - i.e. in [B, E, G, L, M, N, S, W].
+            
+            This is a very simple check against a simple RE as specified.
 
         """
         match = re.match('^([A-PR-UWYZ])([0-9]+)$', self.outward)
         if match:
             return PCValidationCodes.OK
         else:
-            return PCValidationCodes.A9_MALFORMED
+            return PCValidationCodes.OUTWARD_A9_MALFORMED
 
 
     
 if __name__ == '__main__':
     
-    p = PostCode("M1 7EP")
+    pass
