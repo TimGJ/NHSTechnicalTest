@@ -26,14 +26,15 @@ From the bash shell run
 
 `$ python3 NHSTechnicalTestPart1.py`
 
+The command line supports the various options available in the Python
+`unittest` library (e.g. `--verbose`)
+
 ### Part 2
 
 From the bash shell run
 
 `$ python3 NHSTechnicalTestPart2.py`
 
-The command line supports the various options available in the Python
-`unittest` library (e.g. `--verbose`)
 this assumes that the `import_data.csv` file is in the current directory
 and by default will write output of failed records to `failed_validation.csv`
 in the current directory as specified.
