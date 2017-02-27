@@ -36,8 +36,7 @@ does the regular expression validate all UK postcode cases?
 
 @author: Tim Greening-Jackson
 """
-import logging
-import sys
+
 import unittest
 from NHSPostCode import PostCode, PCValidationCodes
 
@@ -71,13 +70,13 @@ class PostCodeTest(unittest.TestCase):
             for postcode in PostCodes:
                 p = PostCode(postcode, analyse=analyse)
                 self.assertEqual(p.status, PCValidationCodes.OK)
-                logging.info("Validating '{}' with analysis={}. Status={}".\
+                print("Validating '{}' with analysis={}. Status={}".\
                              format(postcode, analyse, p.status))
         # Now test with the analyse flag not set at all (e.g. default)
         for postcode in PostCodes:
             p = PostCode(postcode)
             self.assertEqual(p.status, PCValidationCodes.OK)
-            logging.info("Validating '{}' with no analysis flag. Status={}".\
+            print("Validating '{}' with no analysis flag. Status={}".\
                              format(postcode, p.status))
                 
     def test_bad_postcodes_without_analysis(self):
@@ -100,10 +99,10 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode)
             self.assertEqual(p.status, PCValidationCodes.UNKNOWN)
-            logging.info("Validating '{}' with no analyse flag. Status={}".format(postcode, p.status))
+            print("Validating '{}' with no analyse flag. Status={}".format(postcode, p.status))
             p = PostCode(postcode, analyse=False)
             self.assertEqual(p.status, PCValidationCodes.UNKNOWN)
-            logging.info("Validating '{}' with analyse=False. Status={}".format(postcode, p.status))
+            print("Validating '{}' with analyse=False. Status={}".format(postcode, p.status))
             
     def test_junk_with_analysis(self):
         """
@@ -112,7 +111,7 @@ class PostCodeTest(unittest.TestCase):
         postcode = '$%± ()()'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.JUNK)
-        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
         
     def test_outward_aa9_malformed_with_analysis(self):
         """
@@ -122,7 +121,7 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode, analyse=True)
             self.assertEqual(p.status, PCValidationCodes.OUTWARD_AA9_MALFORMED)
-            logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+            print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
 
     def test_outward_aa9a_malformed_with_analysis(self):
         """
@@ -131,7 +130,7 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'AA9C 9AA'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.OUTWARD_AA9A_MALFORMED)
-        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
 
     def test_outward_malformed_with_analysis(self):
         """
@@ -141,7 +140,7 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode, analyse=True)
             self.assertEqual(p.status, PCValidationCodes.OUTWARD_MALFORMED)
-            logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+            print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
 
     def test_inward_malformed_with_analysis(self):
         """
@@ -157,7 +156,7 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode, analyse=True)
             self.assertEqual(p.status, PCValidationCodes.INWARD_MALFORMED)
-            logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+            print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
         
     def test_single_digit_district_with_analysis(self):
         """
@@ -166,7 +165,7 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'FY10 4PL'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.SINGLE_DIGIT_DISTRICT)
-        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
+        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
         
     def test_double_digit_district_with_analysis(self):
         """
@@ -175,7 +174,7 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'SO1 4QQ'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.DOUBLE_DIGIT_DISTRICT)
-        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
+        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
         
     def test_no_space_with_analysis(self):
         """
@@ -185,31 +184,10 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'LS44PL'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.INCORRECT_GROUPING)
-        logging.info("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
+        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
         
-
-def PerformTests():
-    """
-    Perform the Part 1 tests
-    
-    Parameters:
-        None
-        
-    Returns:
-        None
-    """
-    logging.info('Starting Part 1 tests')
-
-    unittest.main()
-
-    logging.info('Finished Part 1 tests')
-
-
-
 if __name__ == '__main__':
-
-    logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
-                format = '%(asctime)s:%(levelname)s:%(message)s')
-    PerformTests()
+    
+    unittest.main()
     
 

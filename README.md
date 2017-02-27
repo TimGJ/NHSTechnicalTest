@@ -13,49 +13,51 @@ to the appropriate scripts.
 ## Files
 The software consists of the following source files
 
-1. `NHSPostCode.py` Fundamental definitions (principally the PostCode class)
+1. `NHSPostCode.py` Fundamental definitions (principally the PostCode class and status codes)
 2. `NHSTechnicalTestPart1.py` Part 1 tests
 3. `NHSTechnicalTestPart2.py` Part 2 tests
 4. `NHSTechnicalTestPart3.py` Part 3 tests
-5. `RunTests.py` The main script used to execute the tests
 
 ## Running the software
 
-In a Linux, MacOS or Unix environment, assuming that the above files
-are in the current working directory as well as the `import_data.csv`
-file simply execute
+### Part 1
 
-`$ python3 RunTests.py`
+From the bash shell run
 
-This will write the default output files to the current directory.
+`$ python3 NHSTechnicalTestPart1.py`
 
-For help/options execute
+### Part 2
 
-`$ python3 RunTests.py --help`
+From the bash shell run
 
-Output is via the Python logger to sys.stdout. It can be redirected
-to a file by using the `--logfile` option
+`$ python3 NHSTechnicalTestPart2.py`
 
-`$ python3 RunTests.py --logfile = test.log`
+this assumes that the `import_data.csv` file is in the current directory
+and by default will write output to `failed_validation.csv` in the current
+directory as specified.
 
-To specify an input file name use the `--input` option e.g.
+These defaults can be overridden using the `--input` and `--unmatched` options
+respectively e.g.
 
-`$ python3 RunTests.py --input = /home/fred/import_data.csv`
+`$ python3 NHSTechnicalTestPart2.py --input /home/fred/myfile.csv --unmatched /tmp/foo.csv`
 
-To specify error (i.e. unmatched) and success (i.e. matched) files
-use the `--unmatched` and `--matched` options respectively e.g.
+### Part 3
 
-`$ python3 RunTests.py --error = /tmp/bad.csv --matched = /tmp/good.csv`
+From the bash shell run
 
-By default all three sets of tests are run. To specify one or more
-parts to run use the `--parts` option e.g.
+`$ python3 NHSTechnicalTestPart3.py`
 
-`$ python3 RunTests.py --parts 2 3`
+this assumes that the `import_data.csv` file is in the current directory
+and by default will write output to `failed_validation.csv` in the current
+directory as specified.
 
-would only run the Part 2 and Part 3 tests. All command line options may be
-abbreviated.
+These defaults can be overridden using the `--input`, `--matched` and `--unmatched` options
+respectively e.g.
 
-# Validation and Status Codes
+`$ python3 NHSTechnicalTestPart3.py --input /home/fred/myfile.csv --unmatched /tmp/foo.csv --matched /tmp/bar.csv`
+
+
+## Validation and Status Codes
 
 In the event that a PostCode does not validate an analysis can optionally
 be run. Objects of the `PostCode` class have an attribute `status`.

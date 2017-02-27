@@ -25,8 +25,9 @@ needs to match the critieria in Part 1.
 import logging
 import sys
 import csv
+import argparse
 
-from NHSPostCode import PostCode
+from NHSPostCode import PostCode, PCValidationCodes
 
 def WriteOutputFile(filename, records, description=None):
     """
@@ -39,6 +40,13 @@ def WriteOutputFile(filename, records, description=None):
         
     Returns:
         Boolean. True if successful.
+
+    Note:
+        As we are interested in performance for bulk import, we are using a
+        CSV writer rather than a CSV DictWriter as the performance is significantly
+        greater. This means, though, that we manually have to write the field names
+        to the first row. We then use a dictionary comprehension to write the contents
+        as this is much faster than an unrolled for loop.
         
     """
 
@@ -47,25 +55,31 @@ def WriteOutputFile(filename, records, description=None):
             if description:
                 logging.info("Writing {} list to {} ({:,} records)".format(description, 
                              filename, len(records)))
-            writer = csv.writer(outfile)
-            writer.writerow(['row_id', 'postcode'])
+            writer = csv.writer(outfile)             # Create the writer object
+            writer.writerow(['row_id', 'postcode'])  # Write the header row with field names
+            # Use a list comprehension for performance
             [writer.writerow([r.row_id, r.postcode]) for r in records]
             return True
-    except PermissionError:
+    except (PermissionError, FileNotFoundError):
+        # PermissionError usually means we are trying to write to a directory
+        # or overwrite a file where we don't have appropriate permissions.
+        # We can (occasionally) get FileNotFoundError if the file has a filename
+        # which is illegal - e.g. contains brackets or other strange characters
         logging.error("Can't open {} for writing".format(filename))
         return False
 
-def PerformTests(InputFileName   = 'import_data.csv',
-                 SuccessFileName = 'succeeded_valdation.csv', 
-                 ErrorFileName   = 'failed_validation.csv'):
+
+def PerformTests(InputFileName       = 'import_data.csv',
+                 SuccessFileName     = 'succeeded_valdation.csv', 
+                 UnmatchedFileName   = 'failed_validation.csv'):
     """
     Performs the part 3 tests
     
     Parameters:
         
-        InputFileName:   Name of the input CSV file from which the postcodes are read
-        SuccessFileName: Name of the file to which to write the valid postcode records 
-        ErrorFileName:   Name of the file to which to write invalid postcode records
+        InputFileName:     Name of the input CSV file from which the postcodes are read
+        SuccessFileName:   Name of the file to which to write the valid postcode records 
+        UnmatchedFileName: Name of the file to which to write invalid postcode records
         
     Returns:
         
@@ -111,17 +125,27 @@ def PerformTests(InputFileName   = 'import_data.csv',
 
     logging.info('Starting Part 3 tests')
     try:
+        logging.info("Reading {}".format(InputFileName))
         with open(InputFileName) as infile:
             reader = csv.reader(infile)
             pcs = [PostCode(r[1], r[0]) for i, r in enumerate(reader)][1:]
             # Having got the list of postcodes,  divide it in to two lists, 
-            # for the successful and unsuccessful postcode matches
+            # for the successful and unsuccessful postcode matches. Using two
+            # separate list comprehensions rather than a single for loop which 
+            # appends records to two lists will be much faster.
             
             logging.info("Creating sorted lists")
-            successful   = sorted([p for p in pcs if p.match])
-            unsuccessful = sorted([p for p in pcs if not p.match])
-            WriteOutputFile(SuccessFileName, successful, "matched")
-            WriteOutputFile(ErrorFileName, unsuccessful, "unmatched")
+            # Note that as we have an __lt__ method defined in the 
+            # PostCode class, we can sort postcodes in to order automatically
+            # using the Python sorted keyword. This will be extremely fast 
+            # (and much easier to understand and maintain) than explicitly 
+            # defining our own sort routines.
+
+            successful   = sorted([p for p in pcs if p.status == PCValidationCodes.OK])
+            WriteOutputFile(SuccessFileName,   successful,   "matched")
+
+            unsuccessful = sorted([p for p in pcs if p.status != PCValidationCodes.OK])
+            WriteOutputFile(UnmatchedFileName, unsuccessful, "unmatched")
             return True
     
     except FileNotFoundError:
@@ -130,8 +154,39 @@ def PerformTests(InputFileName   = 'import_data.csv',
         logging.error("Can't open file {} for reading".format(InputFileName))
     return False
 
-if __name__ == '__main__':
 
+def ParseArguments():
+    """
+    Parse the command line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Perform Part 3 NHS Digital Technical Tests")
+    parser.add_argument("--input",       
+                        help="Input postcode data", 
+                        default="import_data.csv")
+    parser.add_argument("--matched",     
+                        help="Output matched/validated data", 
+                        default="succeeded_validation.csv")
+    parser.add_argument("--unmatched",   
+                        help="Output unmatched/invalid data", 
+                        default="failed_validation.csv")
+
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    """
+    Performs the Part 3 tests. Simply parses the arguments, sets up the logger
+    stream and then calls the function to perform the tests.
+    
+    Command line arguments:
+        --input:       Input file name
+        --matched:     Output file name for matched records
+        --unmtached:   Output file name for unmatched
+        
+    """
+    args = ParseArguments()
     logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
                 format = '%(asctime)s:%(levelname)s:%(message)s')
-    PerformTests()
+
+    PerformTests(InputFileName       = args.input,
+                 SuccessFileName     = args.matched, 
+                 UnmatchedFileName   = args.unmatched)

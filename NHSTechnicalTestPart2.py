@@ -27,11 +27,44 @@ failed_validation.csv with the same columns as above.
 import logging
 import sys
 import csv
+import argparse
 
-from NHSPostCode import PostCode
+from NHSPostCode import PostCode, PCValidationCodes
 
-def PerformTests(InputFileName = 'import_data.csv',
-                 ErrorFileName = 'failed_validation.csv'):
+
+def ProcessFiles(infile, errfile):
+    """
+    Processes the records in infile and writes ones which don't 
+    have postcodes which match the RE to errfile in the same 
+    format as infile.
+    
+    Parameters:
+        infile: Handle of input file (opened before call)
+        errfile: Handle of error (unmatched) file (opened before call)
+        
+    Returns:
+        rows: Total number of rows processed
+        errs: Total number of errored/malformed rows
+    """
+    rows = 0 # Total rows read 
+    errs = 0 # Total errored rows
+    # Create a dictionary reader which will read each line in to a 
+    # dict keyed on field names. Then use the same fieldnames to drive
+    # a dictwriter to output the errored records.
+    reader = csv.DictReader(infile)
+    writer = csv.DictWriter(errfile, fieldnames=reader.fieldnames)
+    writer.writeheader()   # Write the header line with the field names
+    for record in reader:  # Iterate through all input records
+        rows += 1
+        # If a postcode doesn't validate OK then write that row to the unmatched file
+        if PostCode(record['postcode']).status != PCValidationCodes.OK:
+            writer.writerow(record)
+            errs += 1
+    return rows, errs
+
+    
+def PerformTests(InputFileName     = 'import_data.csv',
+                 UnmatchedFileName = 'failed_validation.csv'):
     """
     Performs the part 2 tests
     
@@ -44,31 +77,27 @@ def PerformTests(InputFileName = 'import_data.csv',
         
         Success: Boolean. True if exectuted successfully else False
     """
-    # Open the input and output files and then create a 
-    # csv.DictReader and csv.DictWriter associated with each, 
-    # assigning the same column names to the output file
-    # as the input. Note that as of Python 3.x we need the "newline=''"
+    # Open the input and output files and then process their contents.
+    # Note that as of Python 3.x we need the "newline=''"
     # in the open statement to suppress printing blank lines in the 
     # CSV file if we run this under Windows.
 
-    errs = 0 # Count of malformed records
-
     logging.info('Starting Part 2 tests')
     try:
+        logging.info("Reading {}".format(InputFileName))
         with open(InputFileName) as infile:
             try:
-                with open(ErrorFileName, 'w', newline = '') as errfile:
-                    reader = csv.DictReader(infile)
-                    writer = csv.DictWriter(errfile, fieldnames=reader.fieldnames)
-                    writer.writeheader()
-                    for i, record in enumerate(reader):
-                        if not PostCode(record['postcode']).match:
-                            writer.writerow(record)
-                            errs += 1
+                logging.info("Writing {}".format(UnmatchedFileName))
+                with open(UnmatchedFileName, 'w', newline = '') as errfile:
+                    rows, errs = ProcessFiles(infile, errfile)
                     logging.info('Part 2 tests completed. Read {:,} rows from {}. {:,} Errors ({:.0%}).'\
-                                .format(i+1, InputFileName, errs, errs/(i+1)))
-                return True
-            except PermissionError:
+                                 .format(rows, InputFileName, errs, errs/rows))
+                    return True # Completed successfully
+            except (PermissionError, FileNotFoundError):
+                # PermissionError usually means we are trying to write to a directory
+                # or overwrite a file where we don't have appropriate permissions.
+                # We can (occasionally) get FileNotFoundError if the file has a filename
+                # which is illegal - e.g. contains brackets or other strange characters
                 logging.error("Can't open {} for writing".format(ErrorFileName))
     except FileNotFoundError:
         logging.error("Can't find file {}".format(InputFileName))
@@ -77,8 +106,32 @@ def PerformTests(InputFileName = 'import_data.csv',
     return False
     
 
-if __name__ == '__main__':
+def ParseArguments():
+    """
+    Parse the command line arguments
+    """
+    parser = argparse.ArgumentParser(description="Perform Part 2 NHS Digital Technical Tests")
+    parser.add_argument("--input",   
+                        help="Input postcode data", 
+                        default="import_data.csv")
+    parser.add_argument("--unmatched",   
+                        help="Output unmatched/invalid data", 
+                        default="failed_validation.csv")
+    return parser.parse_args()
 
+if __name__ == '__main__':
+    """
+    Performs the Part 2 tests. Simply parses the arguments, sets up the logger
+    stream and then calls the function to perform the tests.
+
+    Command line arguments:
+        --input:       Input file name
+        --unmtached:   Output file name for unmatched
+    """
+    args = ParseArguments()
     logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
                 format = '%(asctime)s:%(levelname)s:%(message)s')
-    PerformTests()        
+
+    PerformTests(InputFileName     = args.input,
+                 UnmatchedFileName = args.unmatched)
+

@@ -182,6 +182,11 @@ class PostCode:
             
         """
         self.postcode = rawtext                     # The raw text of the postcode
+        try:                                        # Convert the row_id to integer
+            self.row_id = int(row_id)               # if it is amenable, as this will
+        except (TypeError, ValueError):             # be much easier and faster for
+            self.row_id = None                      # searching/sorting etc.  
+            
 
         # Split the postcode in to its inward and outward groups, so for M1 7EP 
         # the outward is "M1" and the inward "7EP". If there aren't exactly
@@ -190,9 +195,9 @@ class PostCode:
         groups = re.split("\s", self.postcode.strip())
 
         if len(groups) != 2:
-            self.outward  = None                    # Shouldn't need to set these...
-            self.inward   = None                    # ... to None but probably wise ...
-            self.match    = None                    # ... in case someone refers to them elsewhere.
+            self.outward  = None                    # Shouldn't need to set these
+            self.inward   = None                    # to None but probably wiser
+            self.match    = None                    # in case someone refers to them elsewhere.
             self.status   = PCValidationCodes.INCORRECT_GROUPING
         else:
             self.outward  = groups[0]
