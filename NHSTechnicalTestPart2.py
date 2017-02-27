@@ -99,7 +99,7 @@ def PerformTests(InputFileName     = 'import_data.csv',
                 # or overwrite a file where we don't have appropriate permissions.
                 # We can (occasionally) get FileNotFoundError if the file has a filename
                 # which is illegal - e.g. contains brackets or other strange characters
-                logging.error("Can't open {} for writing".format(ErrorFileName))
+                logging.error("Can't open {} for writing".format(UnmatchedFileName))
     except FileNotFoundError: # Given it a file name which doesn't exist or we can't read
         logging.error("Can't find file {}".format(InputFileName))
     except IOError:           # Usually caused if the file is already open elsewhere
