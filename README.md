@@ -33,8 +33,8 @@ From the bash shell run
 `$ python3 NHSTechnicalTestPart2.py`
 
 this assumes that the `import_data.csv` file is in the current directory
-and by default will write output to `failed_validation.csv` in the current
-directory as specified.
+and by default will write output of failed records to `failed_validation.csv`
+in the current directory as specified.
 
 These defaults can be overridden using the `--input` and `--unmatched` options
 respectively e.g.
@@ -48,8 +48,9 @@ From the bash shell run
 `$ python3 NHSTechnicalTestPart3.py`
 
 this assumes that the `import_data.csv` file is in the current directory
-and by default will write output to `failed_validation.csv` in the current
-directory as specified.
+and by default will write output to `failed_validation.csv` 
+and matched records to `successeded_validation.csv`
+both in the current directory as specified.
 
 These defaults can be overridden using the `--input`, `--matched` and `--unmatched` options
 respectively e.g.
