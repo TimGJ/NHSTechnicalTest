@@ -82,15 +82,16 @@ def PerformTests(InputFileName     = 'import_data.csv',
     # in the open statement to suppress printing blank lines in the 
     # CSV file if we run this under Windows.
 
-    logging.info('Starting Part 2 tests')
-    try:
-        logging.info("Reading {}".format(InputFileName))
-        with open(InputFileName) as infile:
-            try:
-                logging.info("Writing {}".format(UnmatchedFileName))
+    # Try opening the input file, handling any plausible exceptions
+    try:   
+        logging.info("Opening {} for reading".format(InputFileName))
+        with open(InputFileName) as infile: 
+        # With the input sucesfully openend, try opening the output and handle exceptions                               
+            try: 
+                logging.info("Opening {} for writing ".format(UnmatchedFileName))
                 with open(UnmatchedFileName, 'w', newline = '') as errfile:
-                    rows, errs = ProcessFiles(infile, errfile)
-                    logging.info('Part 2 tests completed. Read {:,} rows from {}. {:,} Errors ({:.0%}).'\
+                    rows, errs = ProcessFiles(infile, errfile) # Process the two files
+                    logging.info('Read {:,} rows from {}. Wrote {:,} errored rows ({:.1%}).'\
                                  .format(rows, InputFileName, errs, errs/rows))
                     return True # Completed successfully
             except (PermissionError, FileNotFoundError):
@@ -99,9 +100,9 @@ def PerformTests(InputFileName     = 'import_data.csv',
                 # We can (occasionally) get FileNotFoundError if the file has a filename
                 # which is illegal - e.g. contains brackets or other strange characters
                 logging.error("Can't open {} for writing".format(ErrorFileName))
-    except FileNotFoundError:
+    except FileNotFoundError: # Given it a file name which doesn't exist or we can't read
         logging.error("Can't find file {}".format(InputFileName))
-    except IOError:
+    except IOError:           # Usually caused if the file is already open elsewhere
         logging.error("Can't open file {} for reading".format(InputFileName))
     return False
     

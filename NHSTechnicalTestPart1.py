@@ -35,6 +35,86 @@ Please read (https://en.wikipedia.org/wiki/Postcodes_in_the_United_Kingdom#Valid
 does the regular expression validate all UK postcode cases?
 
 @author: Tim Greening-Jackson
+
+Notes
+
+This module performs unit tests on the NHSPostCode.PostCode class. It tests each of the 
+postcodes specified in the test cases above in three ways: 
+
+1. With analyse = True
+2. With analyse = False
+3. With analyse unspecified (defaults to False)
+
+(See the class definition in NHSPostCode.py for details of the effects on the 
+PostCode.status attribute).
+
+The tables below show the test cases and expected resultsfor each of these. Note that the
+status codes (OK, UNKNOWN) are as defined in the NHSPostCode.PCValidationCodes class. The test
+cases are as defined in the PostCodeTest class below.
+
+Unit Test Cases
+
++----------+-------------------------------------------+-------------------------------------+
+|Test Case | analyse=True                              | analyse=False or unspecified        |
++----------+-------------------------------------------+-------------------------------------+
+|$%± ()()  | test_junk_with_analysis                   | test_bad_postcodes_without_analysis |
+|XX XXX	   | test_inward_malformed_with_analysis       | test_bad_postcodes_without_analysis |
+|A1 9A	   | test_inward_malformed_with_analysis       | test_bad_postcodes_without_analysis |
+|LS44PL    | test_no_space_with_analysis               | test_bad_postcodes_without_analysis |
+|Q1A 9AA   | test_outward_malformed_with_analysis      | test_bad_postcodes_without_analysis |
+|V1A 9AA   | test_outward_malformed_with_analysis      | test_bad_postcodes_without_analysis |
+|X1A 9BB   | test_outward_malformed_with_analysis      | test_bad_postcodes_without_analysis |
+|LI10 3QP  | test_outward_aa9_malformed_with_analysis  | test_bad_postcodes_without_analysis |
+|LJ10 3QP  | test_outward_aa9_malformed_with_analysis  | test_bad_postcodes_without_analysis |
+|LZ10 3QP  | test_outward_aa9_malformed_with_analysis  | test_bad_postcodes_without_analysis |
+|A9Q 9AA   | test_outward_malformed_with_analysis      | test_bad_postcodes_without_analysis |
+|AA9C 9AA  | test_outward_aa9a_malformed_with_analysis | test_bad_postcodes_without_analysis |
+|FY10 4PL  | test_single_digit_district_with_analysis  | test_bad_postcodes_without_analysis |
+|SO1 4QQ   | test_double_digit_district_with_analysis  | test_bad_postcodes_without_analysis |
+|EC1A 1BB  | test_good_postcodes                       | test_good_postcodes                 |
+|W1A 0AX   | test_good_postcodes                       | test_good_postcodes                 |
+|M1 1AE    | test_good_postcodes                       | test_good_postcodes                 |
+|B33 8TH   | test_good_postcodes                       | test_good_postcodes                 |
+|CR2 6XH   | test_good_postcodes                       | test_good_postcodes                 |
+|DN55 1PT  | test_good_postcodes                       | test_good_postcodes                 |
+|GIR 0AA   | test_good_postcodes                       | test_good_postcodes                 |
+|SO10 9AA  | test_good_postcodes                       | test_good_postcodes                 |
+|FY9 9AA   | test_good_postcodes                       | test_good_postcodes                 |
+|WC1A 9AA  | test_good_postcodes                       | test_good_postcodes                 |
++----------+-------------------------------------------+-------------------------------------+
+
+Expected Results
+
++----------+-------------------------------------------+-------------------------------------+
+|Test Case | analyse=True                              | analyse=False or unspecified        |
++----------+-------------------------------------------+-------------------------------------+
+|$%± ()()  | PCValidationCodes.JUNK                    | PCValidationCodes.UNKNOWN           |
+|XX XXX    | PCValidationCodes.INWARD_MALFORMED        | PCValidationCodes.UNKNOWN           |
+|A1 9A     | PCValidationCodes.INWARD_MALFORMED        | PCValidationCodes.UNKNOWN           |
+|LS44PL    | PCValidationCodes.INCORRECT_GROUPING      | PCValidationCodes.UNKNOWN           |
+|Q1A 9AA   | PCValidationCodes.OUTWARD_MALFORMED       | PCValidationCodes.UNKNOWN           |
+|V1A 9AA   | PCValidationCodes.OUTWARD_MALFORMED       | PCValidationCodes.UNKNOWN           |
+|X1A 9BB   | PCValidationCodes.OUTWARD_MALFORMED       | PCValidationCodes.UNKNOWN           |
+|LI10 3QP  | PCValidationCodes.OUTWARD_AA9_MALFORMED   | PCValidationCodes.UNKNOWN           |
+|LJ10 3QP  | PCValidationCodes.OUTWARD_AA9_MALFORMED   | PCValidationCodes.UNKNOWN           |
+|LZ10 3QP  | PCValidationCodes.OUTWARD_AA9_MALFORMED   | PCValidationCodes.UNKNOWN           |
+|A9Q 9AA   | PCValidationCodes.OUTWARD_MALFORMED       | PCValidationCodes.UNKNOWN           |
+|AA9C 9AA  | PCValidationCodes.OUTWARD_AA9A_MALFORMED  | PCValidationCodes.UNKNOWN           |
+|FY10 4PL  | PCValidationCodes.SINGLE_DIGIT_DISTRICT   | PCValidationCodes.UNKNOWN           |
+|SO1 4QQ   | PCValidationCodes.DOUBLE_DIGIT_DISTRICT   | PCValidationCodes.UNKNOWN           |
+|EC1A 1BB  | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|W1A 0AX   | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|M1 1AE    | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|B33 8TH   | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|CR2 6XH   | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|DN55 1PT  | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|GIR 0AA   | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|SO10 9AA  | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|FY9 9AA   | PCValidationCodes.OK                      | PCValidationCodes.OK                |
+|WC1A 9AA  | PCValidationCodes.OK                      | PCValidationCodes.OK                |
++----------+-------------------------------------------+-------------------------------------+
+
+
 """
 
 import unittest
@@ -70,14 +150,11 @@ class PostCodeTest(unittest.TestCase):
             for postcode in PostCodes:
                 p = PostCode(postcode, analyse=analyse)
                 self.assertEqual(p.status, PCValidationCodes.OK)
-                print("Validating '{}' with analysis={}. Status={}".\
-                             format(postcode, analyse, p.status))
+
         # Now test with the analyse flag not set at all (e.g. default)
         for postcode in PostCodes:
             p = PostCode(postcode)
             self.assertEqual(p.status, PCValidationCodes.OK)
-            print("Validating '{}' with no analysis flag. Status={}".\
-                             format(postcode, p.status))
                 
     def test_bad_postcodes_without_analysis(self):
         """
@@ -99,10 +176,8 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode)
             self.assertEqual(p.status, PCValidationCodes.UNKNOWN)
-            print("Validating '{}' with no analyse flag. Status={}".format(postcode, p.status))
             p = PostCode(postcode, analyse=False)
             self.assertEqual(p.status, PCValidationCodes.UNKNOWN)
-            print("Validating '{}' with analyse=False. Status={}".format(postcode, p.status))
             
     def test_junk_with_analysis(self):
         """
@@ -111,7 +186,6 @@ class PostCodeTest(unittest.TestCase):
         postcode = '$%± ()()'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.JUNK)
-        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
         
     def test_outward_aa9_malformed_with_analysis(self):
         """
@@ -121,7 +195,6 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode, analyse=True)
             self.assertEqual(p.status, PCValidationCodes.OUTWARD_AA9_MALFORMED)
-            print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
 
     def test_outward_aa9a_malformed_with_analysis(self):
         """
@@ -130,7 +203,6 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'AA9C 9AA'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.OUTWARD_AA9A_MALFORMED)
-        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
 
     def test_outward_malformed_with_analysis(self):
         """
@@ -140,7 +212,6 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode, analyse=True)
             self.assertEqual(p.status, PCValidationCodes.OUTWARD_MALFORMED)
-            print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
 
     def test_inward_malformed_with_analysis(self):
         """
@@ -156,7 +227,6 @@ class PostCodeTest(unittest.TestCase):
         for postcode in PostCodes:
             p = PostCode(postcode, analyse=True)
             self.assertEqual(p.status, PCValidationCodes.INWARD_MALFORMED)
-            print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
         
     def test_single_digit_district_with_analysis(self):
         """
@@ -165,7 +235,6 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'FY10 4PL'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.SINGLE_DIGIT_DISTRICT)
-        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))
         
     def test_double_digit_district_with_analysis(self):
         """
@@ -174,7 +243,6 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'SO1 4QQ'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.DOUBLE_DIGIT_DISTRICT)
-        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
         
     def test_no_space_with_analysis(self):
         """
@@ -184,10 +252,8 @@ class PostCodeTest(unittest.TestCase):
         postcode = 'LS44PL'
         p = PostCode(postcode, analyse=True)
         self.assertEqual(p.status, PCValidationCodes.INCORRECT_GROUPING)
-        print("Validating '{}' with analyse=True. Status={}".format(postcode, p.status))        
         
 if __name__ == '__main__':
     
     unittest.main()
     
-
