@@ -15,9 +15,9 @@ or
 
 from the shell e.g. 
 
-`tim@merlin:~/metatron/Projects/NHSTechnicalTest$ python -V
+`tim@merlin:~/metatron/Projects/NHSTechnicalTest$ python -V`
 
-Python 3.6.0 :: Anaconda 4.3.0 (64-bit)`
+`Python 3.6.0 :: Anaconda 4.3.0 (64-bit)`
 
 It is assumed that a suitable file containing the input data is
 available. By default this would be the file `import_data.csv`
