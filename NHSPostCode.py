@@ -105,24 +105,38 @@ import sys
 logging.basicConfig(stream = sys.stdout, level = logging.DEBUG, 
                 format = '%(asctime)s:%(levelname)s:%(message)s')
 
+# Check the version number. enums were only introduced in Python 3.4
+
+if (sys.version_info.major < 3) or (sys.version_info.major == 3 and 
+                                   sys.version_info.minor < 4):
+    logging.error("Requires Python >= 3.4 to run. Aborting execution.")
+    sys.exit()
+else:
+    logging.info("Python {}.{} detected".format(sys.version_info.major,
+                                            sys.version_info.minor))
+
 
 class PCValidationCodes(enum.Enum):
     """
     Enumeration to contain the possible reasons for 
     a PostCode not to validate according to the rules
     and testcases defined.
+    
+    Note that we are using "old style" enumerations
+    (Python 3.4 compatible), rather than enum.auto()
+    which was introduced at Python 3.6
     """
-    OK                     = enum.auto()
-    UNKNOWN                = enum.auto()
-    OUTWARD_MALFORMED      = enum.auto()
-    OUTWARD_AA9A_MALFORMED = enum.auto()
-    OUTWARD_AA9_MALFORMED  = enum.auto()
-    OUTWARD_A9_MALFORMED   = enum.auto()
-    INWARD_MALFORMED       = enum.auto()
-    INCORRECT_GROUPING     = enum.auto()
-    JUNK                   = enum.auto()
-    SINGLE_DIGIT_DISTRICT  = enum.auto()
-    DOUBLE_DIGIT_DISTRICT  = enum.auto()
+    OK                     =  1
+    UNKNOWN                =  2
+    OUTWARD_MALFORMED      =  3
+    OUTWARD_AA9A_MALFORMED =  4 
+    OUTWARD_AA9_MALFORMED  =  5 
+    OUTWARD_A9_MALFORMED   =  6 
+    INWARD_MALFORMED       =  7 
+    INCORRECT_GROUPING     =  8 
+    JUNK                   =  9 
+    SINGLE_DIGIT_DISTRICT  = 10 
+    DOUBLE_DIGIT_DISTRICT  = 11 
 
 
 class PostCode:
